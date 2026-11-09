@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """근거가 있는 프로젝트 구성 JSON을 Mermaid·Markdown·HTML로 변환한다."""
 import argparse
+import colorsys
+import hashlib
 import html
 import json
 import os
@@ -10,6 +12,40 @@ from urllib.parse import quote
 
 KINDS = {'instruction': '적용 지침', 'agent': '에이전트', 'skill': '필수 스킬'}
 RELATIONS = {'instruction': '지침 적용', 'delegate': '위임', 'required': '필수 호출'}
+NEUTRAL = {'fill': '#f1f5f9', 'stroke': '#64748b', 'color': '#334155'}
+EFFORT_COLORS = {
+    'none': ('#f1f5f9', '#64748b'), 'minimal': ('#f1f5f9', '#475569'),
+    'low': ('#e6f5f0', '#0f766e'), 'medium': ('#eaf1ff', '#2563eb'),
+    'high': ('#fff3db', '#b45309'), 'xhigh': ('#ffede3', '#c2410c'),
+    'max': ('#fce7f3', '#be185d'), 'ultra': ('#f3e8ff', '#7e22ce'),
+}
+
+
+def appearance(data):
+    """같은 모델은 같은 색, effort는 고정 단계 색을 사용한다."""
+    values = {field: sorted({n[field]['value'] for n in data['nodes'] if field in n})
+              for field in ('model', 'effort')}
+    models, used = {}, set()
+    # 기본 12색을 넓게 배치하고 같은 지도의 해시 충돌을 해소한다.
+    count = max(12, len(values['model']))
+    for value in values['model']:
+        if value.strip().lower() in ('inherit', 'default', 'auto'):
+            models[value] = dict(NEUTRAL)
+            continue
+        slot = int(hashlib.sha256(value.encode()).hexdigest()[:8], 16) % count
+        while slot in used:
+            slot = (slot + 1) % count
+        used.add(slot)
+        def shade(lightness):
+            rgb = colorsys.hls_to_rgb(slot / count, lightness, .55)
+            return '#' + ''.join(f'{round(c * 255):02x}' for c in rgb)
+        models[value] = {'fill': shade(.92), 'stroke': shade(.42), 'color': '#243149'}
+    efforts = {}
+    order = {value: i for i, value in enumerate(EFFORT_COLORS)}
+    for value in sorted(values['effort'], key=lambda v: (order.get(v.strip().lower(), len(order)), v)):
+        fill, stroke = EFFORT_COLORS.get(value.strip().lower(), (NEUTRAL['fill'], NEUTRAL['stroke']))
+        efforts[value] = {'fill': fill, 'stroke': stroke, 'color': stroke}
+    return {'models': models, 'efforts': efforts}
 
 
 def text(value):
@@ -38,6 +74,11 @@ def validate(data, root):
         if key in nodes or n['kind'] not in KINDS:
             raise ValueError('중복 노드 또는 지원하지 않는 종류입니다.')
         text(n['label']); text(n['description']); source(n['source'])
+        for field in ('model', 'effort'):
+            if field in n:
+                if n['kind'] != 'agent' or not isinstance(n[field], dict):
+                    raise ValueError('모델·effort는 에이전트의 값과 근거 객체로 입력하세요.')
+                text(n[field]['value']); source(n[field]['source'])
         nodes[key] = n
     for e in data['edges']:
         a, b = nodes[e['from']], nodes[e['to']]
@@ -62,7 +103,8 @@ def label(value):
     return ''.join(c if c.isalnum() or c == ' ' else f'#{ord(c)};' for c in ' '.join(value.split()))
 
 
-def mermaid(data):
+def mermaid(data, styles=None):
+    styles = styles or appearance(data)
     lines = ['flowchart LR']
     ids = {n['id']: f'n{i}' for i, n in enumerate(data['nodes'])}
     for kind, title in KINDS.items():
@@ -71,7 +113,9 @@ def mermaid(data):
             continue
         lines.append(f'  subgraph g_{kind}["{title}"]')
         for n in group:
-            lines.append(f'    {ids[n["id"]]}["{label(n["label"])}"]:::{kind}')
+            caption = [label(n['label'])]
+            caption += [label(f'{field}: {n[field]["value"]}') for field in ('model', 'effort') if field in n]
+            lines.append(f'    {ids[n["id"]]}["{"<br/>".join(caption)}"]:::{kind}')
         lines.append('  end')
     if not data['nodes']:
         lines.append('  empty["프로젝트 내부에 확인된 역할·지침이 없습니다"]')
@@ -85,6 +129,16 @@ def mermaid(data):
     lines += ['  classDef instruction fill:#f0f3f8,stroke:#95a0b4,color:#34425c',
               '  classDef agent fill:#edf3ff,stroke:#637dea,color:#1e3475',
               '  classDef skill fill:#e4f5ec,stroke:#40966b,color:#205c3e']
+    for n in data['nodes']:
+        properties = []
+        if 'model' in n:
+            color = styles['models'][n['model']['value']]
+            properties += [f'fill:{color["fill"]}', f'color:{color["color"]}']
+        if 'effort' in n:
+            color = styles['efforts'][n['effort']['value']]
+            properties += [f'stroke:{color["stroke"]}', 'stroke-width:3px']
+        if properties:
+            lines.append(f'  style {ids[n["id"]]} {",".join(properties)}')
     return '\n'.join(lines) + '\n'
 
 
@@ -103,6 +157,17 @@ def markdown(data, diagram, root, out):
              '## 역할과 근거', '', '| 이름 | 종류 | 설명 | 근거 |', '| --- | --- | --- | --- |']
     for n in data['nodes']:
         lines.append(f'| {md(n["label"])} | {KINDS[n["kind"]]} | {md(n["description"])} | {link(n["source"])} |')
+    configured = [n for n in data['nodes'] if 'model' in n or 'effort' in n]
+    if configured:
+        lines += ['', '## 모델과 effort', '',
+                  '에이전트 배경색은 모델, 테두리색은 effort를 구분합니다. 색상은 성능 평가가 아닙니다.',
+                  '프로젝트에 명시된 설정만 표시하며, 미지정 값은 생략합니다. 실제 실행 시 적용된 값은 아닙니다.', '',
+                  '| 에이전트 | 모델 | 모델 근거 | effort | effort 근거 |', '| --- | --- | --- | --- | --- |']
+        for n in configured:
+            fields = [md(n['label'])]
+            for field in ('model', 'effort'):
+                fields += [md(n[field]['value']), link(n[field]['source'])] if field in n else ['—', '—']
+            lines.append('| ' + ' | '.join(fields) + ' |')
     lines += ['', '## 연결 근거', '', '| 연결 | 의미·조건 | 근거 |', '| --- | --- | --- |']
     names = {n['id']: n['label'] for n in data['nodes']}
     for e in data['edges']:
@@ -120,10 +185,11 @@ def markdown(data, diagram, root, out):
 def render(data, root, out):
     root, out = Path(root).resolve(), Path(out).resolve()
     validate(data, root)
-    diagram = mermaid(data)
+    styles = appearance(data)
+    diagram = mermaid(data, styles)
     document = markdown(data, diagram, root, out)
     template = (Path(__file__).resolve().parent.parent / 'assets/viewer.html').read_text()
-    payload = json.dumps({'map': data, 'mermaid': diagram, 'markdown': document}, ensure_ascii=False)
+    payload = json.dumps({'map': data, 'mermaid': diagram, 'markdown': document, 'styles': styles}, ensure_ascii=False)
     payload = payload.replace('&', '\\u0026').replace('<', '\\u003c').replace('>', '\\u003e')
     page = template.replace('<!--MAP_DATA-->', payload)
     out.mkdir(parents=True, exist_ok=True)

@@ -27,7 +27,7 @@ scripts/catalog.mjs             카탈로그 생성 및 정합성 검사
 
 | 플러그인 | 스킬 | 목적 |
 | --- | --- | --- |
-| [visual-review](plugins/visual-review/README.md) | agent-map | 프로젝트 내부 에이전트 위임·필수 스킬 관계를 Mermaid와 HTML로 시각화 |
+| [visual-review](plugins/visual-review/README.md) | agent-map | 프로젝트 내부 에이전트 위임·필수 스킬 관계와 모델·effort를 Mermaid와 HTML로 시각화 |
 
 Claude Code에서는 **`/agent-map`**, Codex 앱에서는 **`agent-map` 스킬 선택**으로 사용한다. Codex CLI·IDE에서는 `$agent-map`, 이름이 겹치면 `$visual-review:agent-map`으로 구분한다. Claude Code의 전체 호출명은 `/visual-review:agent-map`이다.
 

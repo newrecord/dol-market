@@ -74,6 +74,73 @@ class AgentMapTests(unittest.TestCase):
         render.validate(self.data, self.root)
         self.assertIn('n1 -->', render.mermaid(self.data))
 
+    def setting(self, value, line=1):
+        return {'value': value, 'source': {'path': 'AGENTS.md', 'line': line}}
+
+    def test_model_and_effort_have_independent_evidence(self):
+        self.data['nodes'][0].update(model=self.setting('gpt-example'), effort=self.setting('high', 2))
+        out = render.render(self.data, self.root, self.root / 'out')
+        diagram = (out / 'map.mmd').read_text()
+        document = (out / 'map.md').read_text()
+        self.assertIn('model#58; gpt#45;example', diagram)
+        self.assertIn('effort#58; high', diagram)
+        self.assertIn('stroke-width:3px', diagram)
+        self.assertIn('| gpt-example | [AGENTS.md:1]', document)
+        self.assertIn('| high | [AGENTS.md:2]', document)
+        self.assertNotIn('effort: high', document.split('## 연결 근거')[1])
+
+    def test_colors_distinguish_models_and_effort_independently(self):
+        a = self.data['nodes'][0]
+        a.update(model=self.setting('sonnet'), effort=self.setting('medium'))
+        b = self.node('reviewer', 'agent')
+        b.update(model=self.setting('sonnet'), effort=self.setting('ultra'))
+        c = self.node('planner', 'agent')
+        c.update(model=self.setting('gpt-example'))
+        self.data['nodes'] += [b, c]
+        colors = render.appearance(self.data)
+        self.assertNotEqual(colors['models']['sonnet']['fill'], colors['models']['gpt-example']['fill'])
+        self.assertNotEqual(colors['efforts']['medium']['stroke'], colors['efforts']['ultra']['stroke'])
+        self.data['nodes'].reverse()
+        self.assertEqual(render.appearance(self.data), colors)
+        diagram = render.mermaid(self.data)
+        self.assertEqual(diagram.count('fill:' + colors['models']['sonnet']['fill']), 2)
+        render.validate(self.data, self.root)
+
+    def test_inheritance_unknown_and_partial_settings(self):
+        agent = self.data['nodes'][0]
+        for value in ('inherit', 'default', 'auto'):
+            agent['model'] = self.setting(value)
+            self.assertEqual(render.appearance(self.data)['models'][value], render.NEUTRAL)
+        agent['effort'] = self.setting('future-level')
+        render.validate(self.data, self.root)
+        self.assertEqual(render.appearance(self.data)['efforts']['future-level']['stroke'], render.NEUTRAL['stroke'])
+        del agent['model']
+        self.assertIn('effort#58; future#45;level', render.mermaid(self.data))
+        self.assertNotIn('model#58;', render.mermaid(self.data))
+
+    def test_invalid_model_effort_evidence_rejected(self):
+        for field in ('model', 'effort'):
+            for setting in (self.setting(''), self.setting('medium', 99),
+                            {'value': 'medium', 'source': {'path': '../outside', 'line': 1}}, 'medium'):
+                with self.subTest(field=field, setting=setting):
+                    data = copy.deepcopy(self.data)
+                    data['nodes'][0][field] = setting
+                    with self.assertRaises(ValueError): render.validate(data, self.root)
+            data = copy.deepcopy(self.data)
+            data['nodes'][1][field] = self.setting('medium')
+            with self.assertRaises(ValueError): render.validate(data, self.root)
+
+    def test_metadata_does_not_inject_markup(self):
+        value = '</script><img src=x onerror=alert(1)>|[x]'
+        self.data['nodes'][0].update(model=self.setting(value), effort=self.setting(value))
+        out = render.render(self.data, self.root, self.root / 'out')
+        page = (out / 'index.html').read_text()
+        self.assertNotIn(value, page)
+        self.assertNotIn('<img', (out / 'map.mmd').read_text())
+        embedded = json.loads(page.split('id="map-data">', 1)[1].split('</script>', 1)[0])
+        self.assertIn(value, embedded['styles']['models'])
+        self.assertEqual(embedded['map']['nodes'][0]['effort']['value'], value)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,6 +4,8 @@
 
 명시된 위임, 필수 스킬 호출, 지침 적용 관계를 Mermaid 구성도로 표현한다. 조건이 있는 필수 호출은 조건을 연결선에 표시한다. 선택적으로 사용 가능한 스킬은 별도 목록에 정리한다. 에이전트 이름이나 스킬 설명만으로 연결을 추측하지 않는다.
 
+에이전트에 명시된 LLM 모델과 effort도 표시한다. 모델은 노드 배경색, effort는 테두리색으로 구분하며 값도 텍스트로 보여준다. HTML 뷰어에는 배지, 색상 범례와 각 값의 파일 근거가 함께 나온다. 지정하지 않은 값은 생략하고, `inherit`·`default`·`auto` 또는 알 수 없는 effort는 원문을 유지한 중립색으로 표시한다. 조건부 변경은 조건과 근거를 별도 설명에 남긴다.
+
 전역 에이전트, 개인 홈의 스킬, 설치 캐시, 프로젝트 밖의 링크 대상은 조사하지 않는다. 저장소에서 배포하는 플러그인도 해당 프로젝트의 활성 설정과 구분한다. 결과는 설정 문서의 구조이며 실제 실행 기록이나 도구 호출 순서를 의미하지 않는다.
 
 ## 호출
@@ -24,12 +26,14 @@ Codex 앱에서는 `visual-review`의 `agent-map` 스킬을 선택한다. Codex 
 
 기본 출력 위치는 프로젝트의 `docs/agent-map/`이다.
 
-- `map.json`: 프로젝트 내부 근거를 확인한 노드와 연결
+- `map.json`: 프로젝트 내부 근거를 확인한 노드와 연결, 선택적인 모델·effort 선언
 - `map.md`: GitHub에서 볼 수 있는 Mermaid와 근거 목록
 - `map.mmd`: 다른 Mermaid 도구에서도 사용할 수 있는 원본
 - `index.html`: 같은 Mermaid를 렌더링하는 로컬 뷰어
 
 HTML은 브라우저에서 열 수 있다. 브라우저가 제공되는 환경에서는 스킬이 열어 렌더링 상태를 확인한다. 사용할 브라우저가 없으면 파일 경로와 열기 방법을 제공하고 렌더링 확인 여부를 밝힌다.
+
+모델과 effort는 프로젝트에 선언된 값이며 호스트의 실제 실행 설정을 보장하지 않는다. 별칭을 실제 모델 버전으로 바꾸거나 전역 기본값을 채워 넣지 않는다. 해당 필드가 없는 기존 `map.json`도 계속 사용할 수 있다.
 
 뷰어는 고정 버전의 Mermaid를 CDN에서 불러오므로 최초 로딩에 네트워크 연결이 필요하다. 다이어그램 데이터는 HTML 안에 있으며 외부 다이어그램 생성 서비스에 업로드하지 않는다. 오프라인에서는 Markdown과 Mermaid 원본을 사용할 수 있다. 생성 도구는 Python 3.9 이상 표준 라이브러리로 실행되며 Node.js 설치는 요구하지 않는다.
 
@@ -41,7 +45,7 @@ HTML은 브라우저에서 열 수 있다. 브라우저가 제공되는 환경�
 
 ## 개발 검증과 참고
 
-버전 0.1.0. `/plugin marketplace add newrecord/dol-market`, `/plugin install visual-review@dol-market`로 설치한다.
+버전 0.2.0. `/plugin marketplace add newrecord/dol-market`, `/plugin install visual-review@dol-market`로 설치한다.
 
 pstack의 [how 설명 방식](https://github.com/cursor/plugins/tree/main/pstack/skills/how)을 참고해 구조·관계·파일 근거를 분리했다. pstack 코드나 프롬프트를 복제하지 않고 프로젝트 구성 분석에 맞게 작성했다.
 
