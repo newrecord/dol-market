@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location('render', ROOT / 'plugins/dol-agent-map/skills/agent-map/scripts/render.py')
+SPEC = importlib.util.spec_from_file_location('render', ROOT / 'plugins/visual-review/skills/agent-map/scripts/render.py')
 render = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(render)
 

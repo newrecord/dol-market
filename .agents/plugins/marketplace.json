@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "dol-agent-map",
+      "name": "visual-review",
       "source": {
         "source": "local",
-        "path": "./plugins/dol-agent-map"
+        "path": "./plugins/visual-review"
       },
       "policy": {
         "installation": "AVAILABLE",

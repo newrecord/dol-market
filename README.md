@@ -6,7 +6,7 @@ GitHub 저장소가 카탈로그와 플러그인을 함께 배포한다. npm/pnp
 
 ## 설치 단위와 구조
 
-기본은 **플러그인 하나 = 독립 기능 하나 = 스킬 하나**다. 같이 설치해야 의미가 있는 스킬만 같은 플러그인에 묶는다.
+**플러그인은 함께 설치할 기능 묶음, 스킬은 개별 실행 단위**다. `visual-review`는 시각화 리뷰 스킬을 모으며, 현재 `agent-map`을 제공한다. PR 시각화 리뷰 `pr`은 향후 추가 예정이며 아직 구현하지 않았다.
 플러그인 내부의 개별 스킬을 패키지처럼 선택 설치하는 방식은 아니다. 마켓플레이스 등록 자체로 모든 플러그인을 설치하지 않는다.
 
 ```text
@@ -27,17 +27,17 @@ scripts/catalog.mjs             카탈로그 생성 및 정합성 검사
 
 | 플러그인 | 스킬 | 목적 |
 | --- | --- | --- |
-| [dol-agent-map](plugins/dol-agent-map/README.md) | agent-map | 프로젝트 내부 에이전트 위임·필수 스킬 관계를 Mermaid와 HTML로 시각화 |
+| [visual-review](plugins/visual-review/README.md) | agent-map | 프로젝트 내부 에이전트 위임·필수 스킬 관계를 Mermaid와 HTML로 시각화 |
 
-Claude Code에서는 **`/agent-map`**, Codex 앱에서는 **`agent-map` 스킬 선택**으로 사용한다. Codex CLI·IDE의 명시 호출은 `$agent-map`이다.
+Claude Code에서는 **`/agent-map`**, Codex 앱에서는 **`agent-map` 스킬 선택**으로 사용한다. Codex CLI·IDE에서는 `$agent-map`, 이름이 겹치면 `$visual-review:agent-map`으로 구분한다. Claude Code의 전체 호출명은 `/visual-review:agent-map`이다.
 
-`dol-agent-map` 0.1.0은 아래 명령으로 설치할 수 있다.
+플러그인 이름을 `visual-review`로 변경했다. 설치 ID는 `visual-review@dol-market`이다. 이전 `dol-agent-map` 설치가 있다면 [전환 절차](plugins/visual-review/README.md#이전-설치에서-전환)를 따른다.
 
 ```sh
 claude plugin marketplace add newrecord/dol-market
-claude plugin install dol-agent-map@dol-market
+claude plugin install visual-review@dol-market
 codex plugin marketplace add newrecord/dol-market
-codex plugin add dol-agent-map@dol-market
+codex plugin add visual-review@dol-market
 ```
 초기 설치 검증용 `dol-check`는 두 CLI에서 확인 후 제거했다.
 

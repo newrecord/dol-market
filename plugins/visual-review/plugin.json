@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "visual-review",
+  "version": "0.1.0",
+  "description": "프로젝트의 에이전트 구성과 필수 스킬 관계를 Mermaid와 HTML로 검토하는 시각화 리뷰 플러그인입니다.",
+  "author": {
+    "name": "돌마켓"
+  },
+  "license": "MIT"
+}
