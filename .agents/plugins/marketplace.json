@@ -1,0 +1,20 @@
+{
+  "name": "dol-market",
+  "interface": {
+    "displayName": "돌마켓"
+  },
+  "plugins": [
+    {
+      "name": "dol-check",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dol-check"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
