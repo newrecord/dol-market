@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dol-agent-map",
+  "version": "0.1.0",
+  "description": "프로젝트의 에이전트 위임과 필수 스킬 호출을 근거가 있는 Mermaid 지도와 HTML 뷰어로 정리합니다.",
+  "author": {
+    "name": "돌마켓"
+  },
+  "license": "MIT"
+}

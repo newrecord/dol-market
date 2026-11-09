@@ -4,5 +4,11 @@
     "name": "돌마켓"
   },
   "description": "Claude Code와 Codex를 위한 돌마켓",
-  "plugins": []
+  "plugins": [
+    {
+      "name": "dol-agent-map",
+      "source": "./plugins/dol-agent-map",
+      "description": "프로젝트의 에이전트 위임과 필수 스킬 호출을 근거가 있는 Mermaid 지도와 HTML 뷰어로 정리합니다."
+    }
+  ]
 }

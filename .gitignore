@@ -4,3 +4,5 @@
 !.env.example
 node_modules/
 .tmp/
+__pycache__/
+*.pyc

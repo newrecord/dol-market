@@ -1,0 +1,5 @@
+name = "quality_reviewer"
+description = "변경 품질 검토"
+developer_instructions = """
+검토할 때 프로젝트의 verify 스킬을 반드시 호출한다.
+"""

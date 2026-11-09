@@ -2,7 +2,7 @@
 
 Claude Code와 Codex에서 필요한 플러그인만 골라 설치하는 개인 마켓플레이스다.
 GitHub 저장소가 카탈로그와 플러그인을 함께 배포한다. npm/pnpm 레지스트리나 별도 서버는 필요 없다.
-표시 이름은 **돌마켓**, 설치 식별자는 **dol-market**이다. 공개 저장소는 [newrecord/dol-market](https://github.com/newrecord/dol-market)이다. 공통 배포 구조를 제공하며, 현재 등록된 플러그인은 없다.
+표시 이름은 **돌마켓**, 설치 식별자는 **dol-market**이다. 공개 저장소는 [newrecord/dol-market](https://github.com/newrecord/dol-market)이다. Claude Code와 Codex가 공유하는 프로젝트 전용 스킬을 기능별로 제공한다.
 
 ## 설치 단위와 구조
 
@@ -25,10 +25,23 @@ scripts/catalog.mjs             카탈로그 생성 및 정합성 검사
 
 ## 현재 플러그인
 
-현재 카탈로그는 비어 있다. 설치 확인용 `dol-check`는 GitHub에서 Claude Code와 Codex CLI에 각각 설치하고, 새 세션에서 기대 응답을 확인한 뒤 제거했다.
-두 설치 캐시의 스킬 본문과 원본이 일치함도 확인했다. Codex 데스크톱 앱 화면에서의 호출은 별도로 검증하지 않았다.
+| 플러그인 | 스킬 | 목적 |
+| --- | --- | --- |
+| [dol-agent-map](plugins/dol-agent-map/README.md) | agent-map | 프로젝트 내부 에이전트 위임·필수 스킬 관계를 Mermaid와 HTML로 시각화 |
 
-아래 `PLUGIN_NAME`과 `SKILL_NAME`은 앞으로 추가할 실제 이름으로 바꾼다. 플러그인이 추가되기 전에는 설치 명령을 실행할 수 없다.
+Claude Code에서는 **`/agent-map`**, Codex 앱에서는 **`agent-map` 스킬 선택**으로 사용한다. Codex CLI·IDE의 명시 호출은 `$agent-map`이다.
+
+`dol-agent-map` 0.1.0은 아래 명령으로 설치할 수 있다.
+
+```sh
+claude plugin marketplace add newrecord/dol-market
+claude plugin install dol-agent-map@dol-market
+codex plugin marketplace add newrecord/dol-market
+codex plugin add dol-agent-map@dol-market
+```
+초기 설치 검증용 `dol-check`는 두 CLI에서 확인 후 제거했다.
+
+아래 `PLUGIN_NAME`과 `SKILL_NAME`은 앞으로 추가할 실제 이름으로 바꾼다. 로컬 플러그인은 로컬 경로에서, 원격 플러그인은 GitHub에 배포된 후 설치한다.
 
 ## Claude Code에서 로컬 설치
 
@@ -83,7 +96,7 @@ claude plugin validate ./plugins/PLUGIN_NAME
 ```
 
 마지막 명령은 추가하거나 변경한 플러그인 경로로 바꾼다. Node.js는 관리자의 생성·검증에만 필요하며 사용자 설치에는 필요 없다.
-생성 파일도 Git에 함께 올린다. CI는 생성 파일의 일치 여부를 검사한다. Claude 공식 검증과 실제 모델 호출은 별도의 로컬/출시 점검이다.
+생성 파일도 Git에 함께 올린다. CI는 생성 파일의 일치 여부와 지도 생성기의 단위 테스트를 검사한다. Claude 공식 검증과 실제 모델 호출은 별도의 로컬/출시 점검이다.
 
 ## 버전과 배포
 
@@ -125,3 +138,11 @@ codex plugin marketplace remove dol-market
 - [Claude Code manifest](https://code.claude.com/docs/en/plugins-reference)
 - [OpenAI 플러그인 패키징](https://developers.openai.com/plugins/build/plugins)
 - [Codex 스킬](https://learn.chatgpt.com/docs/build-skills)
+
+## agent-map 개발 검증
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+`tests/fixtures/team`은 실제 프로젝트와 구분된 가상 팀이다. 명시된 위임, 조건부 필수 호출, 선택 스킬을 검증한다. 생성기는 Python 3.9 이상 표준 라이브러리를 사용한다. HTML은 요청된 Mermaid 렌더러를 고정 버전 CDN에서 읽으며 온라인 연결이 필요하다.

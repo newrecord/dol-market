@@ -3,5 +3,18 @@
   "interface": {
     "displayName": "돌마켓"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "dol-agent-map",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dol-agent-map"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
 }
