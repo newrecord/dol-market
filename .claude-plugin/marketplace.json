@@ -4,11 +4,5 @@
     "name": "돌마켓"
   },
   "description": "Claude Code와 Codex를 위한 돌마켓",
-  "plugins": [
-    {
-      "name": "dol-check",
-      "source": "./plugins/dol-check",
-      "description": "돌마켓 스킬 로딩을 확인하는 최소 플러그인"
-    }
-  ]
+  "plugins": []
 }

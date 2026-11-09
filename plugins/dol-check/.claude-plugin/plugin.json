@@ -1,9 +1,0 @@
-{
-  "name": "dol-check",
-  "version": "0.1.0",
-  "description": "돌마켓 스킬 로딩을 확인하는 최소 플러그인",
-  "author": {
-    "name": "돌마켓"
-  },
-  "license": "MIT"
-}

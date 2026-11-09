@@ -2,7 +2,7 @@
 
 Claude Code와 Codex에서 필요한 플러그인만 골라 설치하는 개인 마켓플레이스다.
 GitHub 저장소가 카탈로그와 플러그인을 함께 배포한다. npm/pnpm 레지스트리나 별도 서버는 필요 없다.
-표시 이름은 **돌마켓**, 설치 식별자는 **dol-market**이다. 공개 저장소는 [newrecord/dol-market](https://github.com/newrecord/dol-market)이다. 초기 구성과 설치 확인용 플러그인을 제공한다.
+표시 이름은 **돌마켓**, 설치 식별자는 **dol-market**이다. 공개 저장소는 [newrecord/dol-market](https://github.com/newrecord/dol-market)이다. 공통 배포 구조를 제공하며, 현재 등록된 플러그인은 없다.
 
 ## 설치 단위와 구조
 
@@ -25,13 +25,10 @@ scripts/catalog.mjs             카탈로그 생성 및 정합성 검사
 
 ## 현재 플러그인
 
-| 플러그인 | 스킬 | 목적 |
-| --- | --- | --- |
-| dol-check | check | 설치 이후 본문 로딩을 확인하는 진단용 스킬 |
+현재 카탈로그는 비어 있다. 설치 확인용 `dol-check`는 GitHub에서 Claude Code와 Codex CLI에 각각 설치하고, 새 세션에서 기대 응답을 확인한 뒤 제거했다.
+두 설치 캐시의 스킬 본문과 원본이 일치함도 확인했다. Codex 데스크톱 앱 화면에서의 호출은 별도로 검증하지 않았다.
 
-`dol-check`는 업무용 스킬이 아니라 설치 경로를 시험하기 위한 최소 패키지다. 도구 실행이나 파일 변경을 하지 않으며 별도 계정과 설정이 필요 없다.
-새 대화에서 호출했을 때 `돌마켓 스킬 로딩 확인: dol-check / check / 0.1.0`을 응답하는지 확인한다.
-이 결과는 본문 로딩만 확인하며 네트워크 연결이나 다른 플러그인의 품질을 보장하지 않는다.
+아래 `PLUGIN_NAME`과 `SKILL_NAME`은 앞으로 추가할 실제 이름으로 바꾼다. 플러그인이 추가되기 전에는 설치 명령을 실행할 수 없다.
 
 ## Claude Code에서 로컬 설치
 
@@ -39,10 +36,10 @@ scripts/catalog.mjs             카탈로그 생성 및 정합성 검사
 
 ```sh
 claude plugin marketplace add .
-claude plugin install dol-check@dol-market
+claude plugin install PLUGIN_NAME@dol-market
 ```
 
-다른 터미널에서 `claude`를 시작하고 `/dol-check:check`를 실행한다.
+다른 터미널에서 `claude`를 시작하고 `/PLUGIN_NAME:SKILL_NAME`를 실행한다.
 로컬 폴더를 가리키는 마켓플레이스이므로 폴더를 옮기면 다시 등록해야 한다.
 
 ## GitHub 배포 후 설치
@@ -52,10 +49,10 @@ Claude Code 안에서:
 
 ```text
 /plugin marketplace add newrecord/dol-market
-/plugin install dol-check@dol-market
+/plugin install PLUGIN_NAME@dol-market
 ```
 
-새 세션에서 `/dol-check:check`를 실행한다. 이미 같은 이름의 로컬 마켓플레이스를 등록했다면 먼저 기존 등록을 제거하고 GitHub 원본으로 다시 등록한다.
+새 세션에서 `/PLUGIN_NAME:SKILL_NAME`를 실행한다. 이미 같은 이름의 로컬 마켓플레이스를 등록했다면 먼저 기존 등록을 제거하고 GitHub 원본으로 다시 등록한다.
 
 ## Codex 설치
 
@@ -63,17 +60,17 @@ Claude Code 안에서:
 
 ```sh
 codex plugin marketplace add .
-codex plugin add dol-check@dol-market
+codex plugin add PLUGIN_NAME@dol-market
 ```
 
 GitHub 배포 후에는 첫 명령의 `.`을 `newrecord/dol-market`로 바꾼다.
-Codex 앱의 새 대화에서 `dol-check`의 `check` 스킬을 선택하고 로딩 확인을 요청한다.
+Codex 앱의 새 대화에서 설치한 플러그인의 스킬을 선택하고 로딩 확인을 요청한다.
 CLI 버전에 `plugin add`가 없다면 앱 플러그인 화면에서 등록된 마켓플레이스의 플러그인을 설치한다.
 CLI 설치와 앱의 실제 스킬 로딩은 각각 확인해야 한다.
 
 ## 새 플러그인 작성
 
-1. `plugins/<이름>/plugin.json`에 이름, `0.1.0` 버전, 설명, 작성자, 라이선스를 작성한다. `dol-check`를 구조 참고로 사용한다.
+1. `plugins/<이름>/plugin.json`에 이름, `0.1.0` 버전, 설명, 작성자, 라이선스를 작성한다. 공통 manifest에 `name`, `version`, `description`, `author.name`, `license`를 포함한다.
 2. `skills/<스킬명>/SKILL.md`에 `name`, 한 줄 `description`, 실제 작업 지침을 작성한다. 이름과 폴더명은 동일한 소문자 kebab-case로 쓴다.
 3. 플러그인 안에 필요한 참고 문서·스크립트만 추가한다. 검사 스크립트의 frontmatter 검사는 이 저장소의 단순 형식을 대상으로 하며 범용 YAML 검증기는 아니다.
 4. 아래 검증을 수행하고 실제 호스트별 호출 결과를 확인한다.
@@ -82,7 +79,7 @@ CLI 설치와 앱의 실제 스킬 로딩은 각각 확인해야 한다.
 node scripts/catalog.mjs
 node scripts/catalog.mjs --check
 claude plugin validate .
-claude plugin validate ./plugins/dol-check
+claude plugin validate ./plugins/PLUGIN_NAME
 ```
 
 마지막 명령은 추가하거나 변경한 플러그인 경로로 바꾼다. Node.js는 관리자의 생성·검증에만 필요하며 사용자 설치에는 필요 없다.
@@ -93,14 +90,14 @@ claude plugin validate ./plugins/dol-check
 플러그인별 SemVer로 관리한다. 지침 수정도 설치 캐시 갱신을 위해 버전을 올린다.
 마켓플레이스에는 버전을 복제하지 않고 플러그인 manifest를 기준으로 한다.
 새 스킬 작성 → 로컬 검증 → GitHub에 push → 새 터미널에서 원격 설치 → 실제 호출 순서로 진행한다.
-초기 구성의 형식 검증은 완료했다. Claude Code와 Codex 사용자 환경에서 실제 설치·호출 검증은 별도로 진행한다.
+초기 구성의 형식 검증과 두 CLI의 원격 설치·스킬 호출·제거를 확인했다. 새 스킬은 호스트별로 다시 검증한다.
 PR을 만들 때는 이 저장소의 승인 규칙을 따른다.
 
 업데이트는 게시된 Git commit과 플러그인 버전 증가로 배포한다. GitHub Release와 npm publish는 필수가 아니다.
 
 ```sh
 claude plugin marketplace update dol-market
-claude plugin update dol-check@dol-market
+claude plugin update PLUGIN_NAME@dol-market
 codex plugin marketplace upgrade dol-market
 ```
 
@@ -109,9 +106,9 @@ Codex에서는 새 버전 발견 후 앱의 업데이트 동작을 확인한다.
 문제 발생 시 플러그인을 비활성화/제거하고, 원인을 수정하거나 이전 내용을 더 높은 patch 버전으로 재배포한다. 이미 공개한 Git 이력을 재작성하지 않는다.
 
 ```sh
-claude plugin uninstall dol-check@dol-market
+claude plugin uninstall PLUGIN_NAME@dol-market
 claude plugin marketplace remove dol-market
-codex plugin remove dol-check@dol-market
+codex plugin remove PLUGIN_NAME@dol-market
 codex plugin marketplace remove dol-market
 ```
 
